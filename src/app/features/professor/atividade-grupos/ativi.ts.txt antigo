@@ -77,7 +77,7 @@ export class AtividadeGruposComponent implements OnInit {
         this.fecharModal();
         this.carregarGrupos();
       },
-      error: (err: any) => {
+      error: (err) => {
         console.error('Erro ao editar grupo:', err);
         alert('Erro ao editar o grupo.');
       },
@@ -104,7 +104,7 @@ export class AtividadeGruposComponent implements OnInit {
     const idNumerico = Number(String(this.atividadeId).replace(/\D/g, ''));
 
     this.relatorioService.downloadPdf(idNumerico).subscribe({
-      next: (blob: any) => {
+      next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -112,13 +112,13 @@ export class AtividadeGruposComponent implements OnInit {
         a.click();
         window.URL.revokeObjectURL(url);
       },
-      error: (err: any) => console.error('Erro ao gerar PDF:', err),
+      error: (err) => console.error('Erro ao gerar PDF:', err),
     });
   }
 
   carregarGrupos() {
     this.grupoService.listarTodosGrupos().subscribe({
-      next: (dados: GruposDTO[]) => { // <-- CORRIGIDO AQUI!
+      next: (dados) => {
         this.grupos = dados.map((g: any) => {
           const usuariosValidos = (g.usuarios || []).filter(
             (u: any) => u && u.nomeUsuario && u.nomeUsuario.trim() !== '',
@@ -139,7 +139,7 @@ export class AtividadeGruposComponent implements OnInit {
 
         this.cdr.detectChanges();
       },
-      error: (err: any) => console.error('Erro ao carregar grupos:', err), // <-- CORRIGIDO AQUI!
+      error: (err) => console.error('Erro ao carregar grupos:', err),
     });
   }
 

@@ -1,117 +1,86 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { HeaderComponent } from '../../../shared/header/header';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GrupoService } from '../../../services/grupo.service';
-import { GruposDTO } from '../../../models/grupos-dto';
-import { GrupoUsuario } from '../../../models/grupo-usuario';
+import { CommonModule } from '@angular/common';
+import { UsuarioService } from '../../../services/usuario.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-sessao-grupos',
   standalone: true,
+  imports: [CommonModule],
   templateUrl: './sessao-grupos.html',
-  styleUrls: ['./sessao-grupos.css'],
-  imports: [CommonModule, FormsModule, RouterModule, HeaderComponent],
+  styleUrls: ['./sessao-grupos.css']
 })
-export class SessaoGruposComponent implements OnInit {
-  usuario: GrupoUsuario | null = null;
+export class SessaoGruposComponent implements OnInit, OnDestroy {
+  hashSessao: string | null = null;
+  idUsuario: number | null = null;
+  grupos: any[] = [];
+  erro: string = '';
+  isLoading: boolean = false;
+  carregandoGrupoId: number | null = null;
 
-  grupos: GruposDTO[] = [];
-
-  grupoSelecionadoId: number | null = null;
-  nomeGrupoSelecionado = '';
-  nomeAtividade = '';
-
-  ModalConfirmacao = false;
-  ModalSucesso = false;
-  ModalErro = false;
+  private sseSubscription?: Subscription;
 
   constructor(
+    private route: ActivatedRoute,
     private router: Router,
     private grupoService: GrupoService,
-    private cdr: ChangeDetectorRef,
+    private usuarioService: UsuarioService
   ) {}
 
   ngOnInit() {
-    const usuarioSalvo = localStorage.getItem('usuario');
+    // 1. Tenta pegar da URL. Se não tiver, busca no SessionStorage (salvou do F5!)
+    const sessao = this.usuarioService.recuperarSessao();
+    this.hashSessao = this.route.snapshot.queryParamMap.get('hash') || sessao?.hash;
+    this.idUsuario = Number(this.route.snapshot.queryParamMap.get('idUsuario')) || sessao?.idUsuario;
 
-    if (usuarioSalvo) {
-      this.usuario = JSON.parse(usuarioSalvo);
+    // 2. Se o aluno cair aqui de paraquedas sem dados, joga pro login
+    if (!this.hashSessao || !this.idUsuario) {
+      this.router.navigate(['/aluno']);
+      return;
     }
 
-    setTimeout(() => {
-      this.carregarGrupos();
+    this.carregarGrupos(true);
+
+    // 3. A MÁGICA: Escuta o backend. Se alguém mudar de grupo, a tela atualiza sozinha!
+    this.sseSubscription = this.grupoService.escutarAtualizacoes(this.hashSessao).subscribe({
+       next: () => { this.carregarGrupos(false); } // false = Atualiza silenciosamente sem tela de loading
     });
   }
 
-  carregarGrupos() {
-    this.grupoService.listarTodosGrupos().subscribe({
-      next: (dados) => {
-        this.grupos = dados.map((g: any) => {
-          const usuariosValidos = (g.usuarios || []).filter(
-            (u: any) => u && u.nomeUsuario && u.nomeUsuario.trim() !== '',
-          );
-
-          return {
-            ...g,
-            usuarios: usuariosValidos,
-            qtdeUsuarios: usuariosValidos.length,
-          };
-        });
-
-        if (dados.length > 0) {
-          this.nomeAtividade = dados[0].nomeAtividade;
-        }
-
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error(err);
-      },
-    });
+  ngOnDestroy() {
+    if (this.sseSubscription) { this.sseSubscription.unsubscribe(); }
   }
 
-  abrirConfirmacao(grupo: GruposDTO) {
-    this.grupoSelecionadoId = grupo.idGrupo;
-    this.nomeGrupoSelecionado = grupo.nomeGrupo;
-    this.ModalConfirmacao = true;
-  }
-
-  confirmarGrupo() {
-    if (!this.grupoSelecionadoId || !this.usuario) return;
-
-    const grupoAtual = this.grupos.find((g) => g.idGrupo === this.grupoSelecionadoId);
-    const proximaPosicao = grupoAtual ? grupoAtual.usuarios.length + 1 : 1;
-
-    const dados = {
-      idUsuario: this.usuario.idUsuario,
-      idGrupo: this.grupoSelecionadoId,
-      posicao: proximaPosicao,
-    };
-
-    this.ModalConfirmacao = false;
-
-    this.grupoService.entrarGrupo(dados).subscribe({
-      next: () => {
-        this.ModalSucesso = true;
-
-        this.cdr.detectChanges();
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 2500);
+  carregarGrupos(mostrarLoading: boolean) {
+    if (mostrarLoading) this.isLoading = true;
+    
+    this.grupoService.listarGrupos(this.hashSessao!).subscribe({
+      next: (data) => {
+        this.grupos = data;
+        this.isLoading = false;
       },
       error: () => {
-        this.ModalErro = true;
+        this.erro = 'Erro ao carregar grupos';
+        this.isLoading = false;
+      }
+    });
+  }
 
-        this.cdr.detectChanges();
+  entrarGrupo(idGrupo: number) {
+    this.carregandoGrupoId = idGrupo;
+    this.erro = '';
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 2500);
+    this.grupoService.entrarNoGrupo(this.hashSessao!, idGrupo, this.idUsuario!).subscribe({
+      next: () => {
+        // A lista será recarregada automaticamente pelo SSE (Tempo Real)
+        this.carregandoGrupoId = null;
       },
+      error: (err) => {
+        alert(err.error?.mensagem || 'Erro ao entrar no grupo');
+        this.carregandoGrupoId = null;
+      }
     });
   }
 }
