@@ -5,37 +5,37 @@ import { AtividadeGruposComponent } from './features/professor/atividade-grupos/
 
 export const routes: Routes = [
   {
-  path: '',
-  loadComponent: () =>
-    import('./features/home/home')
-      .then(m => m.Home)
-},
+    path: '',
+    loadComponent: () =>
+      import('./features/home/home')
+        .then(m => m.Home) // Ajustado de volta para m.Home
+  },
 
-{
-  path: 'professor',
-  children: [
-    {
-      path: '',
-      loadComponent: () =>
-        import('./features/professor/professor')
-          .then(m => m.ProfessorComponent)
-    },
-    {
-      path: 'atividades',
-      component: AtividadeGruposComponent
-    },
-    {
-      path: 'atividades/qrcodes', 
-      loadComponent: () =>
-        import('./features/professor/qrcodes/qrcodes')
-          .then(m => m.QRCodesComponent)
-    },
-    {
-      path: 'sessao/:id',
-      component: SessaoGruposComponent
-    }
-  ]
-},
+  {
+    path: 'professor',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/professor/professor')
+            .then(m => m.ProfessorComponent)
+      },
+      {
+        path: 'atividades',
+        component: AtividadeGruposComponent
+      },
+      {
+        path: 'atividades/qrcodes', 
+        loadComponent: () =>
+          import('./features/professor/qrcodes/qrcodes')
+            .then(m => m.QRCodesComponent) // Ajustado para Q maiúsculo, R maiúsculo e C maiúsculo
+      },
+      {
+        path: 'sessao/:id',
+        component: SessaoGruposComponent
+      }
+    ]
+  },
 
   {
     path: 'aluno',
@@ -58,10 +58,9 @@ export const routes: Routes = [
   }, 
   
   {
-  path: 'sobre',
-  loadComponent: () =>
-    import('./pages/sobre/sobre')
-      .then(m => m.SobreComponent)
-}
-
+    path: 'sobre',
+    loadComponent: () =>
+      import('./pages/sobre/sobre')
+        .then(m => m.SobreComponent)
+  }
 ];

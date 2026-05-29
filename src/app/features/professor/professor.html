@@ -1,94 +1,20 @@
-<div class="professor-tema">
-  <app-header title="Painel do Professor" subtitle="Gerencie seus grupos de estudo" backLink="/">
-  </app-header>
+<app-header></app-header>
 
-  <div class="container py-3">
-    <div class="row justify-content-center mb-5">
-      <div class="col-lg-10 col-md-8">
-        <div class="card shadow-sm border-2">
-          <div class="card-body p-2">
-            <h3 class="fw-bold mb-3">Criar Nova Atividade</h3>
-
-            <form [formGroup]="atividadeForm" (ngSubmit)="criarSessao()">
-
-              <div class="mb-2">
-                <label class="form-label">
-                  Descrição da Atividade
-                  <span class="text-danger">*</span>
-                </label>
-
-                <input type="text" class="form-control" formControlName="descricaoAtividade"
-                  placeholder="Ex: Atividade TAT" />
-              </div>
-
-              <div class="mb-2">
-                <label class="form-label">
-                  Quantidade de Alunos na Sala
-                </label>
-
-                <input type="number" class="form-control" formControlName="quantidadeTotalAlunosSala" min="1"
-                  (change)="calcularDistribuicao()" />
-              </div>
-
-              <div class="mb-2">
-                <label class="form-label">Quantidade de Grupos</label>
-
-                <input type="number" class="form-control" formControlName="quantidadeTotalGrupos" min="1"
-                  (change)="atualizarGrupos()" />
-              </div>
-
-              <div class="calculo-card mt-3 fade-slide" *ngIf="mostrarCalculo">
-                <p class="mb-1 text-muted">
-                  {{ totalAlunos }} alunos ÷ {{ groupCount }} grupos =
-                  <strong>{{ baseAlunos }}</strong>
-                </p>
-
-                <ul class="mb-0">
-                  <li *ngFor="let qtd of distribuicao; let i = index">
-                    Grupo {{ i + 1 }}: {{ qtd }} aluno{{ qtd > 1 ? 's' : '' }}
-                  </li>
-                </ul>
-              </div>
-
-              <div class="nome-grupos mt-3" formArrayName="grupoForm">
-
-                <label class="form-label">
-                  Nomes dos Grupos
-                  <span class="text-danger">*</span>
-                </label>
-
-                <div *ngFor="let grupo of grupoForm.controls; let i = index" [formGroupName]="i">
-                  <input type="text" class="form-control mb-2" formControlName="nomeGrupo"
-                    [placeholder]="'Grupo ' + (i + 1)" />
-                </div>
-
-              </div>
-
-              <button class="btn btn-primary w-100 mt-3" type="submit" [disabled]="atividadeForm.invalid">
-                Agrupar
-              </button>
-
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Toast -->
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-      <div class="toast align-items-center text-bg-success border-0" [class.show]="mostrarToast" role="alert">
-
-        <div class="d-flex">
-          <div class="toast-body">
-            <strong>Atividade criada!</strong><br />
-            Redirecionando para os grupos...
-          </div>
-
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="mostrarToast = false">
-          </button>
-        </div>
-      </div>
-    </div>
+<div class="professor-container">
+  <h2>Área do Professor</h2>
+  <div class="cards-container">
+    
+    <a class="card" routerLink="/professor/atividades" style="text-decoration: none; color: inherit;">
+      <div class="card-icon">📚</div>
+      <h3>Atividades e Grupos</h3>
+      <p>Gerencie as atividades e acompanhe os grupos formados.</p>
+    </a>
+    
+    <a class="card" routerLink="/professor/relatorios" style="text-decoration: none; color: inherit;">
+      <div class="card-icon">📊</div>
+      <h3>Relatórios</h3>
+      <p>Veja o desempenho e relatórios das atividades concluídas.</p>
+    </a>
 
   </div>
 </div>
